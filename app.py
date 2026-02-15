@@ -11,7 +11,8 @@ import socket
 from typing import Optional, Dict, Any
 
 import redis
-from pythonjsonlogger import jsonlogger
+from pythonjsonlogger.json import JsonFormatter
+
 from fastapi import FastAPI, UploadFile, File, Form, HTTPException, BackgroundTasks, Header
 
 # ==========================================================
@@ -29,7 +30,7 @@ if not LMS_STORE_URL:
     raise RuntimeError("LMS_STORE_URL must be set")
 
 # ==========================================================
-# LOGGING SETUP (JSON Structured Logging)
+# LOGGING SETUP (JSON Structured Logging - Fixed)
 # ==========================================================
 
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
@@ -38,9 +39,17 @@ logger = logging.getLogger("media-compressor")
 logger.setLevel(LOG_LEVEL)
 
 handler = logging.StreamHandler()
-formatter = jsonlogger.JsonFormatter()
+
+formatter = JsonFormatter(
+    "%(asctime)s %(levelname)s %(name)s %(message)s"
+)
+
 handler.setFormatter(formatter)
+
+# Prevent duplicate handlers in Cloud Run
+logger.handlers = []
 logger.addHandler(handler)
+logger.propagate = False
 
 
 def log_event(event: str, level: str = "info", **kwargs):
@@ -49,6 +58,7 @@ def log_event(event: str, level: str = "info", **kwargs):
         logger.error(data)
     else:
         logger.info(data)
+
 
 
 # ==========================================================
