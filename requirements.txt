@@ -1,5 +1,7 @@
 fastapi
 uvicorn
 python-multipart
-paramiko
+requests
+redis
+python-json-logger
 requests
